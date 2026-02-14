@@ -4,6 +4,31 @@ import numpy as np
 from matplotlib import patches
 from matplotlib.colors import Normalize
 
+# # Calculate all perfect squares including and between a min and max value
+# def perfect_squares_in_range(min_value: int, max_value: int) -> list[int]:
+#     squares = []
+#     n = 1
+#     while True:
+#         square = n * n
+#         if square > max_value:
+#             break
+#         if square >= min_value:
+#             squares.append(square)
+#         n += 1
+#     return squares
+
+
+# # Create colormap with a specified number of discrete colors. Maximize contrast by using a colormap that has good differentiation between colors (e.g., Set3, tab20, or viridis).
+# def create_colormap(num_colors: int):
+#     # Use a colormap with good contrast for discrete colors
+#     base_colormap = cm.get_cmap(
+#         "Set3"
+#     )  # You can change to other colormaps: viridis, plasma, inferno, coolwarm, rainbow
+
+#     # Create a new colormap with the specified number of discrete colors
+#     colors = base_colormap(np.linspace(0, 1, num_colors))
+#     return colors
+
 
 def draw_splines_on_circular_numbers(n, number_pairs, output_file="circular_with_splines.png"):
     """
@@ -53,8 +78,12 @@ def draw_splines_on_circular_numbers(n, number_pairs, output_file="circular_with
         sums = [pair[0] + pair[1] for pair in number_pairs]
         min_sum = min(sums)
         max_sum = max(sums)
-        norm = Normalize(vmin=min_sum, vmax=max_sum)
-        colormap = cm.viridis  # You can change to other colormaps: plasma, inferno, coolwarm, rainbow
+
+        # vmax is highest perfect square less than or equal to n*2 (max possible sum)
+        # norm = Normalize(vmin=min_sum, vmax=max_sum)
+        norm = Normalize(vmin=4, vmax=int(np.floor(np.sqrt(n * 2))) ** 2)
+
+        colormap = cm.gist_rainbow
 
     # Draw splines first (so they appear behind the circles)
     for pair in number_pairs:
@@ -120,10 +149,10 @@ if __name__ == "__main__":
     pairs_60 = [(2, 45), (28, 82), (15, 50), (10, 55), (5, 35)]
     draw_splines_on_circular_numbers(60, pairs_60, "circular_60_splines.png")
 
-    # Example 2: n=100 with connections
-    pairs_100 = [(2, 45), (28, 82), (15, 90), (50, 95), (10, 70), (20, 80)]
-    draw_splines_on_circular_numbers(100, pairs_100, "circular_100_splines.png")
+    # # Example 2: n=100 with connections
+    # pairs_100 = [(2, 45), (28, 82), (15, 90), (50, 95), (10, 70), (20, 80)]
+    # draw_splines_on_circular_numbers(100, pairs_100, "circular_100_splines.png")
 
-    # Example 3: n=24 with many connections (demonstrates color gradient)
-    pairs_24 = [(1, 12), (2, 11), (3, 10), (5, 20), (8, 18), (15, 24)]
-    draw_splines_on_circular_numbers(24, pairs_24, "circular_24_splines.png")
+    # # Example 3: n=24 with many connections (demonstrates color gradient)
+    # pairs_24 = [(1, 12), (2, 11), (3, 10), (5, 20), (8, 18), (15, 24)]
+    # draw_splines_on_circular_numbers(24, pairs_24, "circular_24_splines.png")
