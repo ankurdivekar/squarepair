@@ -4,8 +4,6 @@ import time
 from concurrent.futures import ProcessPoolExecutor
 from typing import Optional
 
-import pandas as pd
-
 
 def get_square_combinations(n_numbers: int) -> list[tuple[int, int]]:
     """Find all pairs of numbers that sum to a perfect square.
@@ -440,11 +438,16 @@ def find_all_complete_sets_backtracking(adjacency: dict[int, set[int]], n_number
     return all_solutions
 
 
-# Main execution
-if __name__ == "__main__":
-    n_numbers: int = 42
+def generate_complete_sets(n_numbers: int) -> list[list[tuple[int, int]]]:
+    """Generate all complete sets of square-sum pairs for numbers 1..n_numbers
 
-    # Get perfect square pairs
+    Args:
+        n_numbers: Upper bound of the number range (1..n_numbers).
+
+    Returns a list of solutions, where each solution is a list of (a, b) pairs
+    such that every number 1..n_numbers is used exactly once and each a+b is a
+    perfect square.
+    """
     square_pairs: list[tuple[int, int]] = get_square_combinations(n_numbers)
     print(f"Found {len(square_pairs)} pairs of numbers that sum to a perfect square, between 1 and {n_numbers}.")
 
@@ -473,30 +476,21 @@ if __name__ == "__main__":
     all_sets: list[list[tuple[int, int]]] = find_all_complete_sets_parallel(adjacency, n_numbers)
     elapsed = time.time() - start_time
 
+    print(f"\nCompleted in {elapsed:.2f} seconds")
+    print(f"Found {len(all_sets)} valid complete sets for n={n_numbers}")
+
+    return all_sets
+
+
+# Main execution
+if __name__ == "__main__":
+    n_numbers: int = 42
+    output_csv: str = f"data/complete_sets_n{n_numbers}.csv"
+    all_sets = generate_complete_sets(n_numbers, output_csv)
+
     print("\n" + 50 * "=")
-    print(f"Completed in {elapsed:.2f} seconds")
-    print(50 * "=")
     if all_sets:
-        print(f"\n✓ Success! Found {len(all_sets)} valid complete sets for n={n_numbers}!")
-        # print("First 5 solutions:")
-        # for i, solution in enumerate(all_sets[:5], 1):
-        #     print(f"  {i}. {solution}")
-        # if len(all_sets) > 5:
-        #     print(f"  ... and {len(all_sets) - 5} more solutions")
-
-        # Write to CSV using a DataFrame
-        max_pairs = max(len(solution) for solution in all_sets)
-        columns = ["Pair No"] + [f"Pair {i}" for i in range(1, max_pairs + 1)]
-        rows = []
-        for i, solution in enumerate(all_sets, 1):
-            row = {"Pair No": i}
-            for idx, (a, b) in enumerate(solution, 1):
-                row[f"Pair {idx}"] = f"{a}-{b}"
-            rows.append(row)
-
-        df = pd.DataFrame(rows, columns=columns)
-        df.to_csv(f"data/complete_sets_n{n_numbers}.csv", index=False)
-        print("\nAll complete sets have been written to 'complete_sets.csv'.")
+        print(f"✓ Success! Found {len(all_sets)} valid complete sets for n={n_numbers}!")
     else:
         print("No valid complete sets found.")
     print("\n" + 50 * "=")
