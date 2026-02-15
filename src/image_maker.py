@@ -120,6 +120,9 @@ def draw_splines_on_circular_numbers(n, number_pairs, output_file="circular_with
             # Draw the spline
             ax.plot(curve[:, 0], curve[:, 1], color=color, linewidth=2, alpha=0.7)
 
+    # Pre-calculate sequential rainbow colors for each circle
+    circle_colors = cm.viridis(np.linspace(0, 1, n))
+
     # Draw circles and numbers on top of splines
     for i in range(n):
         angle = np.pi / 2 - (2 * np.pi * i / n)
@@ -129,12 +132,19 @@ def draw_splines_on_circular_numbers(n, number_pairs, output_file="circular_with
 
         # Add circle around the number
         circle = patches.Circle(
-            (x, y), circle_radius, fill=True, facecolor="black", edgecolor="white", linewidth=1.5, zorder=10
+            (x, y), circle_radius, fill=True, facecolor=circle_colors[i], edgecolor="white", linewidth=1.5, zorder=10
         )
         ax.add_patch(circle)
 
+        # Choose text color for maximum visibility based on circle fill luminance
+        r, g, b = circle_colors[i][:3]
+        luminance = 0.299 * r + 0.587 * g + 0.114 * b
+        text_color = "black" if luminance > 0.43 else "white"
+
         # Add text
-        ax.text(x, y, str(number), color="white", fontsize=12, ha="center", va="center", fontweight="normal", zorder=11)
+        ax.text(
+            x, y, str(number), color=text_color, fontsize=12, ha="center", va="center", fontweight="normal", zorder=11
+        )
 
     # Save the figure
     plt.tight_layout()
