@@ -1,33 +1,19 @@
+"""Render one circular-spline image per square-sum pair solution.
+
+``draw_splines_on_circular_numbers`` draws a single solution. ``generate_images_for_n``
+is the notebook-facing driver: it reads solutions for a given ``n`` from the ordered
+CSV (falling back to the unordered complete-sets CSV) and renders one PNG per row.
+"""
+
+from pathlib import Path
+
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import patches
 from matplotlib.colors import Normalize
 
-# # Calculate all perfect squares including and between a min and max value
-# def perfect_squares_in_range(min_value: int, max_value: int) -> list[int]:
-#     squares = []
-#     n = 1
-#     while True:
-#         square = n * n
-#         if square > max_value:
-#             break
-#         if square >= min_value:
-#             squares.append(square)
-#         n += 1
-#     return squares
-
-
-# # Create colormap with a specified number of discrete colors. Maximize contrast by using a colormap that has good differentiation between colors (e.g., Set3, tab20, or viridis).
-# def create_colormap(num_colors: int):
-#     # Use a colormap with good contrast for discrete colors
-#     base_colormap = cm.get_cmap(
-#         "Set3"
-#     )  # You can change to other colormaps: viridis, plasma, inferno, coolwarm, rainbow
-
-#     # Create a new colormap with the specified number of discrete colors
-#     colors = base_colormap(np.linspace(0, 1, num_colors))
-#     return colors
+from src.csv_writer import Pair, read_solutions
 
 
 def draw_splines_on_circular_numbers(n, number_pairs, output_file="circular_with_splines.png"):
@@ -154,15 +140,37 @@ def draw_splines_on_circular_numbers(n, number_pairs, output_file="circular_with
     print(f"Image with splines saved to {output_file}")
 
 
+def generate_images_for_n(
+    n: int,
+    max_images: int,
+    *,
+    data_dir: str = "data",
+    images_dir: str = "images",
+) -> int:
+    """Render up to ``max_images`` solutions for ``n`` into ``{images_dir}/n{n}/``.
+
+    Reads ``{data_dir}/ordered_sets_n{n}.csv`` if it exists (solutions pre-sorted for
+    minimal change between frames), otherwise ``{data_dir}/complete_sets_n{n}.csv``.
+    The output directory is cleared first. Returns the number of images written.
+    """
+    ordered_csv = Path(data_dir) / f"ordered_sets_n{n}.csv"
+    complete_csv = Path(data_dir) / f"complete_sets_n{n}.csv"
+    csv_path = ordered_csv if ordered_csv.exists() else complete_csv
+
+    out_dir = Path(images_dir) / f"n{n}"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    for file in out_dir.iterdir():
+        if file.is_file():
+            file.unlink()
+
+    count = 0
+    for pairs in read_solutions(str(csv_path), limit=max_images):
+        draw_splines_on_circular_numbers(n, pairs, str(out_dir / f"{count:06}.png"))
+        count += 1
+    return count
+
+
 if __name__ == "__main__":
-    # Example 1: n=60 with a few connections
-    pairs_60 = [(2, 45), (28, 82), (15, 50), (10, 55), (5, 35)]
+    # Example: n=60 with a few connections
+    pairs_60: list[Pair] = [(2, 45), (28, 82), (15, 50), (10, 55), (5, 35)]
     draw_splines_on_circular_numbers(60, pairs_60, "circular_60_splines.png")
-
-    # # Example 2: n=100 with connections
-    # pairs_100 = [(2, 45), (28, 82), (15, 90), (50, 95), (10, 70), (20, 80)]
-    # draw_splines_on_circular_numbers(100, pairs_100, "circular_100_splines.png")
-
-    # # Example 3: n=24 with many connections (demonstrates color gradient)
-    # pairs_24 = [(1, 12), (2, 11), (3, 10), (5, 20), (8, 18), (15, 24)]
-    # draw_splines_on_circular_numbers(24, pairs_24, "circular_24_splines.png")
