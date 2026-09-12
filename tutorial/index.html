@@ -1,0 +1,1674 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Square-Sum Pairs</title>
+<meta name="description" content="An interactive tutorial: pairing the numbers 1..n so every pair sums to a perfect square, and the search that finds every solution." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:ital,wght@0,400;0,600;0,700;1,400&display=swap" />
+<style>
+  /* minimal reset (the hosted Artifact supplies its own; this is for the standalone file) */
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; }
+  img, svg { max-width: 100%; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<style>
+  :root {
+    color-scheme: light;
+
+    --paper:      #f5f2ea;
+    --surface:    #fdfcf8;
+    --surface-2:  #efeadd;
+    --ink:        #1e1a14;
+    --ink-2:      #574f42;
+    --ink-3:      #8b8172;
+    --rule:       #e2dccb;
+    --rule-2:     #d0c8b2;
+
+    --accent:      #2f3fb0;
+    --accent-ink:  #ffffff;
+    --accent-soft: rgba(47, 63, 176, 0.10);
+    --accent-line: rgba(47, 63, 176, 0.28);
+
+    --good: #1f8f3e;
+    --bad:  #c23b34;
+
+    /* the "instrument panel" — a single dark world, both page themes */
+    --panel:      #111219;
+    --panel-2:    #1b1d27;
+    --panel-ink:  #ece9df;
+    --panel-ink-2:#9a978d;
+    --panel-rule: rgba(255, 255, 255, 0.13);
+    --panel-node: #2a2d3a;
+
+    --chart-1: #2f3fb0;
+    --chart-2: #e0662f;
+
+    --maxw: 42rem;
+    --wide: 60rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --paper:      #100f0c;
+      --surface:    #18160f;
+      --surface-2:  #201d14;
+      --ink:        #f2eee2;
+      --ink-2:      #bab2a0;
+      --ink-3:      #8b8172;
+      --rule:       #2c281f;
+      --rule-2:     #3a3529;
+
+      --accent:      #9aa6ff;
+      --accent-ink:  #10101a;
+      --accent-soft: rgba(154, 166, 255, 0.14);
+      --accent-line: rgba(154, 166, 255, 0.34);
+
+      --good: #46c46e;
+      --bad:  #ec6b63;
+
+      --chart-1: #9aa6ff;
+      --chart-2: #f0895a;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --paper:      #100f0c;
+    --surface:    #18160f;
+    --surface-2:  #201d14;
+    --ink:        #f2eee2;
+    --ink-2:      #bab2a0;
+    --ink-3:      #8b8172;
+    --rule:       #2c281f;
+    --rule-2:     #3a3529;
+
+    --accent:      #9aa6ff;
+    --accent-ink:  #10101a;
+    --accent-soft: rgba(154, 166, 255, 0.14);
+    --accent-line: rgba(154, 166, 255, 0.34);
+
+    --good: #46c46e;
+    --bad:  #ec6b63;
+
+    --chart-1: #9aa6ff;
+    --chart-2: #f0895a;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 1.0625rem;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 1.35rem; }
+  .wide { max-width: var(--wide); margin-left: auto; margin-right: auto; padding: 0 1.35rem; }
+
+  h1, h2, h3 {
+    font-family: "IBM Plex Serif", Georgia, "Times New Roman", serif;
+    font-weight: 600;
+    line-height: 1.16;
+    text-wrap: balance;
+    color: var(--ink);
+  }
+
+  p { margin: 0 0 1.1rem; }
+  a { color: var(--accent); text-underline-offset: 2px; }
+  strong { font-weight: 600; }
+  em { font-style: italic; }
+
+  code, .mono {
+    font-family: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+  p code, li code {
+    background: var(--surface-2);
+    padding: 0.08em 0.36em;
+    border-radius: 3px;
+    font-size: 0.9em;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  /* ---------- header ---------- */
+  header.hero {
+    border-bottom: 1px solid var(--rule);
+    background:
+      linear-gradient(var(--paper), var(--paper)) padding-box;
+    padding: 3.4rem 0 2.2rem;
+  }
+  .kicker {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.74rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-bottom: 1rem;
+  }
+  header.hero h1 {
+    font-size: clamp(2.1rem, 6vw, 3rem);
+    font-weight: 700;
+    margin: 0 0 0.9rem;
+  }
+  header.hero .lede {
+    font-size: 1.16rem;
+    color: var(--ink-2);
+    margin-bottom: 1.7rem;
+  }
+  .squarestrip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 0.55rem;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.82rem;
+    color: var(--ink-3);
+  }
+  .squarestrip b {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  /* ---------- section scaffolding ---------- */
+  section { padding: 2.9rem 0; border-bottom: 1px solid var(--rule); }
+  section:last-of-type { border-bottom: 0; }
+  .part-label {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.74rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.7rem;
+  }
+  section h2 {
+    font-size: clamp(1.5rem, 4vw, 2rem);
+    margin: 0 0 1.1rem;
+  }
+  section h3 {
+    font-size: 1.16rem;
+    margin: 2rem 0 0.7rem;
+  }
+  .callout {
+    border-left: 3px solid var(--accent);
+    background: var(--accent-soft);
+    padding: 0.85rem 1.1rem;
+    border-radius: 0 6px 6px 0;
+    margin: 1.3rem 0;
+    font-size: 0.99rem;
+  }
+  .callout p:last-child { margin-bottom: 0; }
+
+  /* ---------- panels (the dark instrument) ---------- */
+  .panel {
+    background: var(--panel);
+    color: var(--panel-ink);
+    border-radius: 12px;
+    border: 1px solid var(--panel-rule);
+    padding: 1.15rem;
+    margin: 1.6rem 0;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.16), 0 10px 30px -18px rgba(0,0,0,0.5);
+  }
+  .panel-tag {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--panel-ink-2);
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    margin-bottom: 0.85rem;
+  }
+  .panel svg { display: block; width: 100%; height: auto; }
+  .panel-figure { max-width: 460px; margin: 0 auto; }
+
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+    margin-top: 0.95rem;
+  }
+  button.btn {
+    font: inherit;
+    font-size: 0.9rem;
+    font-family: "IBM Plex Mono", monospace;
+    background: var(--panel-2);
+    color: var(--panel-ink);
+    border: 1px solid var(--panel-rule);
+    border-radius: 7px;
+    padding: 0.4rem 0.7rem;
+    cursor: pointer;
+    line-height: 1;
+  }
+  button.btn:hover { border-color: rgba(255,255,255,0.32); }
+  button.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  button.btn.primary {
+    background: var(--accent);
+    color: var(--accent-ink);
+    border-color: transparent;
+    font-weight: 600;
+  }
+  .seg { display: inline-flex; border: 1px solid var(--panel-rule); border-radius: 7px; overflow: hidden; }
+  .seg button {
+    font: inherit; font-family: "IBM Plex Mono", monospace; font-size: 0.82rem;
+    background: transparent; color: var(--panel-ink-2);
+    border: 0; padding: 0.36rem 0.62rem; cursor: pointer;
+  }
+  .seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+
+  input[type="range"] { accent-color: var(--accent); }
+  .rangerow {
+    display: flex; align-items: center; gap: 0.8rem;
+    font-family: "IBM Plex Mono", monospace; font-size: 0.86rem;
+    color: var(--panel-ink-2); margin-top: 0.9rem;
+  }
+  .rangerow input[type="range"] { flex: 1; min-width: 120px; }
+  .rangerow b { color: var(--panel-ink); font-weight: 600; }
+
+  .narrate {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    background: var(--panel-2);
+    border-radius: 8px;
+    padding: 0.7rem 0.85rem;
+    margin-top: 0.9rem;
+    min-height: 3.1em;
+    display: flex; align-items: center;
+  }
+  .narrate .tick { color: var(--good); }
+  .narrate .cross { color: var(--bad); }
+  .narrate .lead { color: var(--panel-ink-2); margin-right: 0.5rem; }
+
+  .stacklist {
+    display: flex; flex-wrap: wrap; gap: 0.32rem;
+    margin-top: 0.9rem; min-height: 1.8rem;
+  }
+  .chip {
+    font-family: "IBM Plex Mono", monospace; font-size: 0.8rem;
+    background: var(--panel-2); border: 1px solid var(--panel-rule);
+    border-radius: 5px; padding: 0.18rem 0.42rem; color: var(--panel-ink);
+  }
+  .chip.forced { border-color: rgba(70,196,110,0.5); color: var(--good); }
+  .chip.trying { border-color: var(--accent); color: var(--panel-ink); }
+
+  .legendstrip {
+    display: flex; flex-wrap: wrap; gap: 0.28rem 0.7rem;
+    margin-top: 0.75rem;
+    font-family: "IBM Plex Mono", monospace; font-size: 0.72rem;
+    color: var(--panel-ink-2);
+  }
+  .legendstrip span { display: inline-flex; align-items: center; gap: 0.32rem; }
+  .legendstrip i { width: 0.7rem; height: 0.7rem; border-radius: 2px; display: inline-block; }
+
+  /* ---------- stat / numbers ---------- */
+  .statrow { display: grid; grid-template-columns: 1fr; gap: 0.9rem; margin: 1.5rem 0; }
+  @media (min-width: 34rem) { .statrow { grid-template-columns: repeat(3, 1fr); } }
+  .stat {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 9px;
+    padding: 0.95rem 1rem;
+  }
+  .stat .n {
+    font-family: "IBM Plex Serif", Georgia, serif;
+    font-weight: 700;
+    font-size: 1.65rem;
+    line-height: 1.05;
+    display: block;
+    letter-spacing: -0.01em;
+  }
+  .stat .n.small { font-size: 1.24rem; }
+  .stat .l {
+    font-size: 0.84rem; color: var(--ink-2); margin-top: 0.3rem; display: block;
+  }
+
+  /* ---------- charts ---------- */
+  figure { margin: 1.6rem 0; }
+  figure.chart {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 1.1rem 1.1rem 0.8rem;
+  }
+  figure.chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+  figcaption {
+    font-size: 0.86rem;
+    color: var(--ink-2);
+    margin-top: 0.7rem;
+    line-height: 1.5;
+  }
+  .chart-title {
+    font-family: "IBM Plex Sans", sans-serif;
+    font-weight: 600;
+    font-size: 0.98rem;
+    margin-bottom: 0.15rem;
+  }
+  .chart-sub { font-size: 0.82rem; color: var(--ink-3); margin-bottom: 0.6rem; }
+  .chart-legend {
+    display: flex; flex-wrap: wrap; gap: 0.4rem 1rem;
+    font-size: 0.82rem; color: var(--ink-2); margin-bottom: 0.5rem;
+  }
+  .chart-legend span { display: inline-flex; align-items: center; gap: 0.35rem; }
+  .chart-legend i { width: 0.85rem; height: 0.18rem; border-radius: 1px; display: inline-block; }
+
+  .ct { font-family: "IBM Plex Mono", monospace; fill: var(--ink-3); font-size: 11px; }
+  .ct.val { fill: var(--ink-2); }
+  .cgrid { stroke: var(--rule); stroke-width: 1; }
+  .caxis { stroke: var(--rule-2); stroke-width: 1; }
+
+  .tooltip {
+    position: fixed;
+    pointer-events: none;
+    background: var(--panel);
+    color: var(--panel-ink);
+    border: 1px solid var(--panel-rule);
+    border-radius: 7px;
+    padding: 0.4rem 0.6rem;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.78rem;
+    line-height: 1.4;
+    z-index: 50;
+    opacity: 0;
+    transition: opacity 0.1s;
+    max-width: 15rem;
+  }
+
+  /* ---------- data table ---------- */
+  .tablewrap { overflow-x: auto; margin: 1.3rem 0; border: 1px solid var(--rule); border-radius: 9px; }
+  table.data { border-collapse: collapse; width: 100%; font-size: 0.88rem; }
+  table.data th, table.data td {
+    padding: 0.42rem 0.7rem; text-align: right;
+    font-family: "IBM Plex Mono", monospace; font-variant-numeric: tabular-nums;
+    border-bottom: 1px solid var(--rule);
+    white-space: nowrap;
+  }
+  table.data th { color: var(--ink-3); font-weight: 500; text-transform: uppercase; font-size: 0.72rem; letter-spacing: 0.06em; }
+  table.data tr:last-child td { border-bottom: 0; }
+  table.data td.zero { color: var(--ink-3); }
+  table.data caption { text-align: left; font-size: 0.82rem; color: var(--ink-3); padding: 0.6rem 0.7rem; }
+
+  /* ---------- sandbox ---------- */
+  .sandbox-msg {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.86rem;
+    margin-top: 0.85rem;
+    min-height: 2.6em;
+    color: var(--panel-ink-2);
+  }
+  .sandbox-msg .tick { color: var(--good); }
+  .sandbox-msg .cross { color: var(--bad); }
+  .sandbox-msg b { color: var(--panel-ink); }
+
+  .gallery-meta {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-family: "IBM Plex Mono", monospace; font-size: 0.8rem;
+    color: var(--panel-ink-2); margin-top: 0.9rem;
+  }
+
+  ul.plain { padding-left: 1.1rem; }
+  ul.plain li { margin-bottom: 0.5rem; }
+
+  .go-further li { margin-bottom: 0.7rem; }
+  .go-further b { font-weight: 600; }
+
+  footer {
+    padding: 2.6rem 0 3.4rem;
+    color: var(--ink-3);
+    font-size: 0.85rem;
+  }
+  footer a { color: var(--ink-2); }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+  }
+
+  .visually-hidden {
+    position: absolute; width: 1px; height: 1px; overflow: hidden;
+    clip: rect(0 0 0 0); white-space: nowrap;
+  }
+</style>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="kicker">A puzzle in whole numbers</div>
+    <h1>Square-Sum Pairs</h1>
+    <p class="lede">
+      Take the numbers <code>1</code> to <code>n</code> and split them into pairs, so that
+      every pair adds up to a perfect square. When can you do it? How many ways are there?
+      And how would a computer find them all?
+    </p>
+    <div class="squarestrip" aria-hidden="true">
+      <span><b>4</b>=2²</span><span><b>9</b>=3²</span><span><b>16</b>=4²</span>
+      <span><b>25</b>=5²</span><span><b>36</b>=6²</span><span><b>49</b>=7²</span>
+      <span><b>64</b>=8²</span><span><b>81</b>=9²</span><span><b>100</b>=10²</span>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- ================= PART 1 ================= -->
+  <section id="puzzle">
+    <div class="wrap">
+      <div class="part-label">Part 1 — The puzzle</div>
+      <h2>Pair them up</h2>
+      <p>
+        Here are the numbers <code>1, 2, 3, 4, 5, 6, 7, 8</code>. Your job: match them into
+        four pairs so that each pair’s sum is a <strong>perfect square</strong> — a number
+        like <code>4</code>, <code>9</code>, <code>16</code>, <code>25</code> that equals
+        some whole number times itself.
+      </p>
+      <p>
+        Click a number, then click its partner. If the sum is a perfect square the link
+        turns <span style="color:var(--good)">green</span>; if not, it turns
+        <span style="color:var(--bad)">red</span> and springs apart. Pair all eight and
+        you’ve solved it.
+      </p>
+    </div>
+
+    <div class="wide">
+      <div class="panel">
+        <div class="panel-tag"><span>sandbox · n = 8</span><span id="sb-count">0 / 4 pairs</span></div>
+        <div class="panel-figure">
+          <svg id="sandbox" viewBox="0 0 400 400" role="img" aria-label="Eight numbers arranged in a circle to be paired up by clicking"></svg>
+        </div>
+        <div class="sandbox-msg" id="sb-msg">Pick any two numbers to start.</div>
+        <div class="controls">
+          <button class="btn" id="sb-reset">Reset</button>
+          <button class="btn" id="sb-solve">Show the answer</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="wrap">
+      <p>
+        There’s exactly one way to do it: <code>1+8</code>, <code>2+7</code>,
+        <code>3+6</code>, <code>4+5</code> — every pair makes <code>9</code>.
+      </p>
+      <div class="callout">
+        <p>
+          Try the same puzzle with <code>1</code> to <code>10</code>, or <code>1</code> to
+          <code>12</code>, and you’ll get stuck every time. It isn’t that you’re missing a
+          trick — <strong>there is no solution</strong> for those. Part of the fun of this
+          kind of maths is that “impossible” is a real, provable answer.
+        </p>
+      </div>
+      <p>
+        The numbers <code>1</code> to <code>18</code> <em>can</em> be paired, and there’s
+        only one way. Past a certain point the number of solutions explodes. To see why,
+        it helps to redraw the puzzle.
+      </p>
+    </div>
+  </section>
+
+  <!-- ================= PART 2 ================= -->
+  <section id="graph">
+    <div class="wrap">
+      <div class="part-label">Part 2 — Turn it into a picture</div>
+      <h2>A map of who can pair with whom</h2>
+      <p>
+        Draw a dot for each number. Whenever two numbers add up to a perfect square, join
+        their dots with a line. Mathematicians call this picture a <strong>graph</strong> —
+        the dots are <em>nodes</em>, the lines are <em>edges</em>. (Nothing to do with the
+        x-y graphs from algebra class.)
+      </p>
+      <p>
+        Below is that graph for <code>1</code> to <code>n</code>. Drag the slider to change
+        <code>n</code>. Hover or tap an edge to see which square it comes from.
+      </p>
+    </div>
+
+    <div class="wide">
+      <div class="panel">
+        <div class="panel-tag"><span>square-sum graph</span><span id="g-edgecount"></span></div>
+        <div class="panel-figure" style="max-width:520px">
+          <svg id="graph-svg" viewBox="0 0 520 520" role="img" aria-label="A graph: numbers as dots around a circle, joined when they sum to a perfect square"></svg>
+        </div>
+        <div class="rangerow">
+          <label for="g-n">n</label>
+          <input type="range" id="g-n" min="8" max="40" step="2" value="18" />
+          <b id="g-nval">18</b>
+        </div>
+        <div class="controls">
+          <button class="btn primary" id="g-match" aria-pressed="false">Highlight one solution</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="wrap">
+      <p>
+        Now the puzzle has a clean description. A solution is a choice of edges that
+        <strong>covers every dot exactly once</strong> — every number gets one partner,
+        nobody is left over, nobody is used twice. A set of edges like that is called a
+        <strong>perfect matching</strong>.
+      </p>
+      <p>
+        Look at the graph for <code>n = 18</code>. Some numbers are fussy:
+        <code>16</code> touches only <code>9</code>, <code>17</code> touches only
+        <code>8</code>, <code>18</code> touches only <code>7</code>. Those numbers have
+        <em>no choice</em> — a fact we’ll lean on hard in Part 4.
+      </p>
+    </div>
+  </section>
+
+  <!-- ================= PART 3 ================= -->
+  <section id="explode">
+    <div class="wrap">
+      <div class="part-label">Part 3 — Why you can’t just try everything</div>
+      <h2>The pile of possibilities</h2>
+      <p>
+        The lazy plan: list every possible way to pair up the numbers, then keep the ones
+        where all the sums are square. How big is that list?
+      </p>
+      <p>
+        With <code>2k</code> numbers, the count of ways to split them into pairs is
+        <code>1 × 3 × 5 × 7 × ⋯ × (2k−1)</code> — multiply every odd number up to
+        <code>2k−1</code>. It grows <em>fast</em>.
+      </p>
+
+      <div class="statrow" id="explode-stats"></div>
+    </div>
+
+    <div class="wide">
+      <figure class="chart">
+        <div class="chart-title">Pairings to sift through vs. pairings that actually work</div>
+        <div class="chart-sub">Note the axis: each gridline is 1000× the one below it.</div>
+        <div class="chart-legend">
+          <span><i style="background:var(--chart-1)"></i>ways to pair them up</span>
+          <span><i style="background:var(--chart-2)"></i>square-sum solutions</span>
+        </div>
+        <svg id="chart-explode" viewBox="0 0 720 340" role="img"
+             aria-label="Two curves rising with n on a logarithmic scale; total pairings rises far faster than the number of valid solutions"></svg>
+        <figcaption>
+          At <code>n = 30</code> there are about <strong>6 quadrillion</strong>
+          (6,190,283,353,629,375) ways to pair the numbers up — and only <strong>12</strong>
+          are all-squares. Even checking a billion per second, you would grind through this
+          list for <strong>72 days</strong> to find those 12. And <code>n = 30</code> is small:
+          by <code>n = 60</code> the pile has 47 digits.
+        </figcaption>
+      </figure>
+    </div>
+
+    <div class="wrap">
+      <p>
+        So brute force is out. We need a search that throws away huge batches of hopeless
+        pairings without ever looking at them one by one.
+      </p>
+    </div>
+  </section>
+
+  <!-- ================= PART 4 ================= -->
+  <section id="search">
+    <div class="wrap">
+      <div class="part-label">Part 4 — The smart search</div>
+      <h2>Backtracking: guess, and be ready to un-guess</h2>
+      <p>
+        Here’s the idea. Keep a running list of pairs you’ve committed to. Then repeat:
+      </p>
+      <ul class="plain">
+        <li>Pick a number that isn’t paired yet.</li>
+        <li>Try giving it a partner. Add that pair to the list and move on.</li>
+        <li>If you ever reach a number with <em>no</em> legal partner left, you’ve hit a
+          <strong>dead end</strong>. Undo the last guess and try the next option.</li>
+        <li>If every number is paired, you’ve found a solution. Record it and keep
+          exploring for more.</li>
+      </ul>
+      <p>
+        That “undo the last guess” step is <strong>backtracking</strong>. It’s recursion
+        with an eraser. Watch it run on <code>n = 26</code> — which has six solutions —
+        one step at a time.
+      </p>
+    </div>
+
+    <div class="wide">
+      <div class="panel">
+        <div class="panel-tag"><span>backtracking · n = 26</span><span id="st-progress"></span></div>
+        <div class="panel-figure">
+          <svg id="stepper-svg" viewBox="0 0 440 440" role="img"
+               aria-label="The search in progress: committed pairs drawn as chords, the number currently being worked on highlighted"></svg>
+        </div>
+        <div class="narrate" id="st-narrate"></div>
+        <div class="stacklist" id="st-stack" aria-label="pairs committed so far"></div>
+        <div class="controls">
+          <button class="btn" id="st-back">◀ Step</button>
+          <button class="btn primary" id="st-play">Play</button>
+          <button class="btn" id="st-fwd">Step ▶</button>
+          <button class="btn" id="st-reset">Reset</button>
+          <span class="seg" role="group" aria-label="speed">
+            <button data-sp="900" aria-pressed="false">0.5×</button>
+            <button data-sp="450" aria-pressed="true">1×</button>
+            <button data-sp="160" aria-pressed="false">3×</button>
+          </span>
+        </div>
+        <div class="rangerow">
+          <label for="st-scrub">step</label>
+          <input type="range" id="st-scrub" min="0" max="1" step="1" value="0" />
+          <b id="st-scrubval">0</b>
+        </div>
+      </div>
+    </div>
+
+    <div class="wrap">
+      <h3>Shortcut 1 — forced moves</h3>
+      <p>
+        Remember the fussy numbers? If a number has exactly one partner available, there’s
+        nothing to decide — pair them immediately, before guessing anything. Doing this
+        repeatedly often triggers a chain reaction: one forced pair makes another number
+        fussy, which forces the next.
+      </p>
+      <p>
+        For <code>n = 18</code> the chain reaction does the <em>entire</em> job. The search
+        never makes a single free choice:
+      </p>
+      <div class="panel">
+        <div class="panel-tag"><span>all forced · n = 18</span><span>0 guesses</span></div>
+        <div class="panel-figure" style="max-width:380px">
+          <svg id="forced18-svg" viewBox="0 0 380 380" role="img" aria-label="The n=18 solution built entirely from forced moves"></svg>
+        </div>
+        <div class="narrate" id="forced18-msg"></div>
+        <div class="controls">
+          <button class="btn" id="forced18-back">◀</button>
+          <button class="btn primary" id="forced18-step">Next forced pair ▶</button>
+          <button class="btn" id="forced18-reset">Reset</button>
+        </div>
+      </div>
+      <p>
+        The same trick on <code>n = 10</code> marches straight into a wall — <code>2</code>
+        and <code>3</code> are left needing each other, but <code>2+3=5</code> isn’t square.
+        That’s a clean proof that <code>n = 10</code> has no solution at all.
+      </p>
+
+      <h3>Shortcut 2 — deal with the fussiest number first</h3>
+      <p>
+        When the search <em>does</em> have to guess, which number should it guess about?
+        The one with the <strong>fewest</strong> options. If a number has only two possible
+        partners, trying both is cheap and you learn a lot. If you instead guess about a
+        number with six options, you build a wide, shallow tree of possibilities that
+        mostly leads nowhere.
+      </p>
+      <p>
+        Computer scientists call this the <strong>fewest-options-first</strong> rule (or
+        “minimum remaining values”). Here’s what it saves — the bars show how many dead
+        ends each strategy wanders into before finding every solution:
+      </p>
+    </div>
+
+    <div class="wide">
+      <figure class="chart">
+        <div class="chart-title">Dead ends hit before all solutions are found</div>
+        <div class="chart-sub">Lower is better. Same answers, far less wasted work.</div>
+        <div class="chart-legend">
+          <span><i style="background:var(--chart-1)"></i>plain: guess about the lowest number</span>
+          <span><i style="background:var(--chart-2)"></i>fewest-options-first</span>
+        </div>
+        <svg id="chart-mrv" viewBox="0 0 720 320" role="img"
+             aria-label="Grouped bars: for n=26, 32 and 34, the fewest-options-first strategy hits far fewer dead ends than plain search"></svg>
+        <figcaption id="chart-mrv-cap"></figcaption>
+      </figure>
+    </div>
+
+    <div class="wrap">
+      <p>
+        Forced moves and fewest-options-first are the whole trick. Add a fast way to store
+        “which numbers are still free” and you have a search that clears <code>n = 60</code>
+        — all 4.3 million solutions — in a few seconds on a laptop.
+      </p>
+    </div>
+  </section>
+
+  <!-- ================= PART 5 ================= -->
+  <section id="counting">
+    <div class="wrap">
+      <div class="part-label">Part 5 — How many solutions?</div>
+      <h2>A desert, then an avalanche</h2>
+      <p>
+        Run the search for every even <code>n</code> and count. The pattern is strange and
+        lovely: nothing at all for a while, a lone solution here and there, then — once
+        <code>n</code> reaches 24 — it never stops climbing.
+      </p>
+    </div>
+
+    <div class="wide">
+      <figure class="chart">
+        <div class="chart-title">Number of solutions for 1…n</div>
+        <div class="chart-sub">Log scale again. Hollow marks are n with zero solutions.</div>
+        <svg id="chart-counts" viewBox="0 0 720 340" role="img"
+             aria-label="Bars showing the solution count for each even n from 8 to 60: several zeros, then rapid growth to millions"></svg>
+        <figcaption>
+          <code>n</code> = 10, 12, 20 and 22 have <strong>no</strong> solution. From
+          <code>n = 24</code> onward there is always at least one, and the count roughly
+          multiplies by 2–4 with every step.
+        </figcaption>
+      </figure>
+
+      <div class="tablewrap">
+        <table class="data" id="counts-table">
+          <caption>The counts in full. This sequence is catalogued as <a href="https://oeis.org/A252897">OEIS A252897</a>.</caption>
+        </table>
+      </div>
+    </div>
+
+    <div class="wrap">
+      <div class="callout">
+        <p>
+          Nobody has a formula for these numbers. Each one is found by search. The count is
+          known up to about <code>n = 84</code>; past that, the trees are too big for
+          today’s computers to finish. That’s a genuine unsolved corner of mathematics you
+          just walked up to.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= PART 6 ================= -->
+  <section id="explore">
+    <div class="wrap">
+      <div class="part-label">Part 6 — Your turn</div>
+      <h2>Look at the solutions</h2>
+      <p>
+        Each solution has its own shape. Drawn as chords across the circle — coloured by
+        which square each pair makes — they look like this. Step through the solutions for
+        a few values of <code>n</code>.
+      </p>
+    </div>
+
+    <div class="wide">
+      <div class="panel">
+        <div class="panel-tag"><span>solution gallery</span><span id="gal-tag"></span></div>
+        <div class="panel-figure">
+          <svg id="gallery-svg" viewBox="0 0 460 460" role="img" aria-label="One square-sum solution drawn as coloured chords across a ring of numbers"></svg>
+        </div>
+        <div class="legendstrip" id="gal-legend"></div>
+        <div class="gallery-meta">
+          <span id="gal-which"></span>
+          <span id="gal-sum"></span>
+        </div>
+        <div class="controls">
+          <span class="seg" role="group" aria-label="choose n" id="gal-nseg">
+            <button data-n="24" aria-pressed="false">n=24</button>
+            <button data-n="26" aria-pressed="true">n=26</button>
+            <button data-n="28" aria-pressed="false">n=28</button>
+            <button data-n="32" aria-pressed="false">n=32</button>
+            <button data-n="34" aria-pressed="false">n=34</button>
+          </span>
+          <button class="btn" id="gal-prev">◀ Prev</button>
+          <button class="btn" id="gal-next">Next ▶</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="wrap">
+      <h3>Poke at it</h3>
+      <p>
+        Pick any <code>n</code> and the search runs live: how many solutions, and one of
+        them drawn both ways.
+      </p>
+    </div>
+
+    <div class="wide">
+      <div class="panel">
+        <div class="panel-tag"><span>live search</span><span id="live-count"></span></div>
+        <div style="display:grid;gap:1rem;grid-template-columns:1fr">
+          <div class="panel-figure" style="margin:0 auto">
+            <svg id="live-svg" viewBox="0 0 420 420" role="img" aria-label="A live-computed solution for the chosen n"></svg>
+          </div>
+        </div>
+        <div class="rangerow">
+          <label for="live-n">n</label>
+          <input type="range" id="live-n" min="8" max="40" step="2" value="34" />
+          <b id="live-nval">34</b>
+        </div>
+        <div class="narrate" id="live-msg"></div>
+      </div>
+    </div>
+
+    <div class="wrap">
+      <h3>Go further</h3>
+      <ul class="plain go-further">
+        <li><b>Change the rule.</b> Pairs that sum to a <em>prime</em>? To a
+          <em>cube</em>? To a <em>Fibonacci number</em>? Each gives a different graph and a
+          different puzzle.</li>
+        <li><b>Ask for a loop instead of pairs.</b> Arrange <code>1…n</code> in a circle so
+          every <em>neighbouring</em> sum is square. That’s the famous “square-sum problem”
+          — a matching becomes a <em>Hamiltonian cycle</em>.</li>
+        <li><b>Prove the desert.</b> Can you show from the graph alone why <code>n = 12</code>
+          has no perfect matching? (Hint: find a small group of numbers that between them
+          don’t have enough partners.)</li>
+        <li><b>Estimate the avalanche.</b> The counts seem to grow geometrically. Fit a
+          curve to the table and predict <code>n = 62</code>. Then check against a real
+          search.</li>
+      </ul>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>
+      Built to explore the square-sum pairing problem. Solution counts and the live search
+      match <a href="https://oeis.org/A252897">OEIS A252897</a>; the search mirrors a
+      bitmask backtracker with forced-move propagation and fewest-options-first branching.
+      All figures are computed in your browser.
+    </p>
+  </div>
+</footer>
+
+<div class="tooltip" id="tooltip" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------------------------------------------------------------- utilities
+  const SVGNS = "http://www.w3.org/2000/svg";
+  const $ = (s, r) => (r || document).querySelector(s);
+  const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+  function el(name, attrs, kids) {
+    const n = document.createElementNS(SVGNS, name);
+    if (attrs) for (const k in attrs) n.setAttribute(k, attrs[k]);
+    if (kids != null) {
+      if (!Array.isArray(kids)) kids = [kids];
+      for (const c of kids) n.appendChild(typeof c === "string" ? document.createTextNode(c) : c);
+    }
+    return n;
+  }
+  function clear(node) { while (node.firstChild) node.removeChild(node.firstChild); }
+
+  function isSquare(s) { const r = Math.round(Math.sqrt(s)); return r > 0 && r * r === s; }
+  function sqrtOf(s) { return Math.round(Math.sqrt(s)); }
+
+  function fmt(n) {
+    if (n < 1e6) return n.toLocaleString("en-US");
+    if (n < 1e9) return (n / 1e6).toFixed(n < 1e7 ? 2 : 1) + " million";
+    if (n < 1e12) return (n / 1e9).toFixed(2) + " billion";
+    if (n < 1e15) return (n / 1e12).toFixed(2) + " trillion";
+    return (n / 1e15).toFixed(2) + " quadrillion";
+  }
+
+  // ---------------------------------------------------------------- the maths
+  function neighbours(N) {
+    const squares = [];
+    for (let s = 2; s * s <= 2 * N - 1; s++) squares.push(s * s);
+    const adj = Array.from({ length: N + 1 }, () => []);
+    for (let i = 1; i <= N; i++) {
+      for (const sq of squares) {
+        const j = sq - i;
+        if (j >= 1 && j <= N && j !== i) adj[i].push(j);
+      }
+      adj[i].sort((a, b) => a - b);
+    }
+    return adj;
+  }
+  function allEdges(N) {
+    const adj = neighbours(N), out = [];
+    for (let i = 1; i <= N; i++) for (const j of adj[i]) if (j > i) out.push([i, j]);
+    return out;
+  }
+
+  // Backtracking search that mirrors the reference algorithm:
+  // propagate forced (degree-1) moves to a fixed point, prune on degree-0 / odd,
+  // then branch on the lowest free number (naive) or the fewest-options one (mrv).
+  function search(N, opts) {
+    opts = opts || {};
+    const mode = opts.mode || "mrv";
+    const record = !!opts.record;
+    const wantSolutions = !!opts.solutions;
+    const limit = opts.limit || Infinity;
+
+    const adj = neighbours(N);
+    const used = new Array(N + 1).fill(false);
+    const stack = [];
+    const solutions = [];
+    const events = [];
+    const stats = { tries: 0, forced: 0, deadends: 0, backtracks: 0, solutions: 0 };
+
+    const snap = () => stack.map((p) => [p[0], p[1]]);
+    const avail = (v) => { const r = []; for (const p of adj[v]) if (!used[p]) r.push(p); return r; };
+    const push = (a, b) => { used[a] = used[b] = true; stack.push(a < b ? [a, b] : [b, a]); };
+    const pop = () => { const p = stack.pop(); used[p[0]] = used[p[1]] = false; };
+
+    function ev(t, extra) {
+      if (!record) return;
+      const e = { t: t, stack: snap(), note: "" };
+      if (extra) Object.assign(e, extra);
+      events.push(e);
+    }
+
+    function rec() {
+      let localForced = 0;
+      // ---- forced-move propagation
+      while (true) {
+        let d1 = -1, d1p = -1, minv = -1, mind = Infinity, dead = false, deadv = -1;
+        for (let v = 1; v <= N; v++) {
+          if (used[v]) continue;
+          const a = avail(v);
+          if (a.length === 0) { dead = true; deadv = v; break; }
+          if (a.length === 1) { d1 = v; d1p = a[0]; break; }
+          if (a.length < mind) { mind = a.length; minv = v; }
+        }
+        if (dead) {
+          stats.deadends++;
+          ev("deadend", { note: n_(deadv) + " has no partner left — back up", bad: true });
+          while (localForced-- > 0) pop();
+          return;
+        }
+        if (d1 < 0) { opts._minv = minv; break; }
+        push(d1, d1p); localForced++; stats.forced++;
+        ev("forced", { pair: [d1, d1p], note: n_(d1) + " can only pair with " + n_(d1p) + " — forced" });
+      }
+
+      let free = 0;
+      for (let v = 1; v <= N; v++) if (!used[v]) free++;
+
+      if (free === 0) {
+        stats.solutions++;
+        if (wantSolutions) solutions.push(snap());
+        ev("solution", { note: "solution #" + stats.solutions + " complete", n: stats.solutions });
+        while (localForced-- > 0) pop();
+        return;
+      }
+      if (free % 2 === 1) {
+        stats.deadends++;
+        ev("deadend", { note: "an odd number of values left over — impossible", bad: true });
+        while (localForced-- > 0) pop();
+        return;
+      }
+
+      let v;
+      if (mode === "naive") { v = 1; while (used[v]) v++; }
+      else {
+        v = -1; let best = Infinity;
+        for (let k = 1; k <= N; k++) {
+          if (used[k]) continue;
+          const c = avail(k).length;
+          if (c < best) { best = c; v = k; }
+        }
+      }
+
+      const options = avail(v);
+      ev("pivot", { pivot: v, note: "focus on " + n_(v) + " — options: " + options.map(n_).join(", ") });
+      for (const p of options) {
+        stats.tries++;
+        push(v, p);
+        ev("try", {
+          pair: [v, p], pivot: v,
+          note: "try " + n_(v) + "–" + n_(p) + "  (" + v + "+" + p + " = " + (v + p) +
+                (isSquare(v + p) ? " = " + sqrtOf(v + p) + "²)" : ")"),
+        });
+        rec();
+        pop();
+        stats.backtracks++;
+        if (stats.solutions >= limit) { while (localForced-- > 0) pop(); return; }
+        ev("backtrack", { note: "undo " + n_(v) + "–" + n_(p) });
+      }
+      while (localForced-- > 0) pop();
+    }
+    function n_(x) { return "" + x; }
+
+    rec();
+    return { solutions, events, stats, adj };
+  }
+
+  function countSolutions(N) {
+    try { return search(N, {}).stats.solutions; }
+    catch (e) { return null; }
+  }
+
+  // ---------------------------------------------------------------- geometry
+  function ringPoints(N, cx, cy, r) {
+    const pts = [];
+    for (let i = 1; i <= N; i++) {
+      const ang = -Math.PI / 2 + (2 * Math.PI * (i - 1)) / N;
+      pts[i] = [cx + r * Math.cos(ang), cy + r * Math.sin(ang)];
+    }
+    return pts;
+  }
+  function chordPath(p1, p2, cx, cy, pull) {
+    const f = pull == null ? 0.42 : pull;
+    const c1x = cx + f * (p1[0] - cx), c1y = cy + f * (p1[1] - cy);
+    const c2x = cx + f * (p2[0] - cx), c2y = cy + f * (p2[1] - cy);
+    return "M" + p1[0] + " " + p1[1] + " C" + c1x + " " + c1y + " " + c2x + " " + c2y + " " + p2[0] + " " + p2[1];
+  }
+
+  // colour a pair by which perfect square it sums to (k = 2..10)
+  const SQUARE_COLORS = {
+    2: "#e8746b", 3: "#f0a24e", 4: "#f1d24c", 5: "#8ed15a",
+    6: "#4bc9a6", 7: "#4aa6e0", 8: "#6f8bef", 9: "#a878e6", 10: "#e07ac0",
+  };
+  const squareColor = (sum) => SQUARE_COLORS[sqrtOf(sum)] || "#8a8a8a";
+
+  function ringNodeColor(i, N) {
+    // cool gradient around the ring, legible on the dark panel
+    const t = (i - 1) / Math.max(1, N - 1);
+    const h = 210 - 80 * t;      // blue -> teal
+    const l = 32 + 16 * t;
+    return "hsl(" + h + " 34% " + l + "%)";
+  }
+
+  // Draw a ring of numbers + a set of pairs. Returns node <g> map for later tweaks.
+  function drawRing(svg, N, config) {
+    config = config || {};
+    const vb = svg.viewBox.baseVal;
+    const cx = vb.width / 2, cy = vb.height / 2;
+    const R = Math.min(cx, cy) - (N > 24 ? 30 : 34);
+    const nodeR = N > 30 ? 9.5 : N > 18 ? 11 : 13;
+    const pts = ringPoints(N, cx, cy, R);
+    clear(svg);
+
+    const gChords = el("g", {});
+    const gNodes = el("g", {});
+    svg.appendChild(gChords);
+    svg.appendChild(gNodes);
+
+    // faint context edges
+    if (config.contextEdges) {
+      for (const [a, b] of config.contextEdges) {
+        gChords.appendChild(el("path", {
+          d: chordPath(pts[a], pts[b], cx, cy, 0.5),
+          fill: "none", stroke: "var(--panel-rule)", "stroke-width": 1,
+        }));
+      }
+    }
+
+    // committed / solution chords
+    const chords = config.pairs || [];
+    for (const pr of chords) {
+      const a = pr[0], b = pr[1], sum = a + b;
+      const status = pr[2];
+      let stroke = squareColor(sum), w = 3, dash = null, op = 0.95;
+      if (config.plain) { stroke = "var(--accent)"; }
+      if (status === "trying") { stroke = "var(--accent)"; dash = "5 4"; w = 2.5; }
+      if (status === "forced") { w = 3; }
+      if (status === "bad") { stroke = "var(--bad)"; w = 3; }
+      gChords.appendChild(el("path", {
+        d: chordPath(pts[a], pts[b], cx, cy, config.pull),
+        fill: "none", stroke: stroke, "stroke-width": w, "stroke-linecap": "round",
+        "stroke-dasharray": dash || "", opacity: op,
+      }));
+    }
+
+    // interactive edges (graph section)
+    if (config.hoverEdges) {
+      for (const [a, b] of config.hoverEdges) {
+        const path = el("path", {
+          d: chordPath(pts[a], pts[b], cx, cy, 0.5),
+          fill: "none", stroke: "transparent", "stroke-width": 12,
+          "pointer-events": "stroke", style: "cursor:pointer",
+        });
+        const base = el("path", {
+          d: chordPath(pts[a], pts[b], cx, cy, 0.5),
+          fill: "none", stroke: "var(--panel-rule)", "stroke-width": 1,
+        });
+        const showTip = (ev2) => {
+          base.setAttribute("stroke", squareColor(a + b));
+          base.setAttribute("stroke-width", "2.5");
+          tip(ev2, a + " + " + b + " = " + (a + b) + " = " + sqrtOf(a + b) + "²");
+        };
+        const hideTip = () => {
+          base.setAttribute("stroke", "var(--panel-rule)");
+          base.setAttribute("stroke-width", "1");
+          hideTooltip();
+        };
+        path.addEventListener("mouseenter", showTip);
+        path.addEventListener("mousemove", (e) => tip(e, a + " + " + b + " = " + (a + b) + " = " + sqrtOf(a + b) + "²"));
+        path.addEventListener("mouseleave", hideTip);
+        path.addEventListener("click", (e) => { showTip(e); setTimeout(hideTip, 1600); });
+        gChords.appendChild(base);
+        gChords.appendChild(path);
+      }
+    }
+
+    // nodes
+    const nodeEls = {};
+    for (let i = 1; i <= N; i++) {
+      const [x, y] = pts[i];
+      const inMatch = config.usedSet ? config.usedSet.has(i) : false;
+      const isPivot = config.pivot === i;
+      const g = el("g", {});
+      const c = el("circle", {
+        cx: x, cy: y, r: nodeR,
+        fill: inMatch ? ringNodeColor(i, N) : "var(--panel-node)",
+        stroke: isPivot ? "var(--accent)" : "rgba(255,255,255,0.28)",
+        "stroke-width": isPivot ? 3 : 1.25,
+      });
+      const t = el("text", {
+        x: x, y: y + 0.5, "text-anchor": "middle", "dominant-baseline": "central",
+        "font-family": "'IBM Plex Mono', monospace",
+        "font-size": nodeR + 2,
+        fill: inMatch ? "#fff" : "var(--panel-ink-2)",
+        "font-weight": isPivot ? 600 : 400,
+      }, "" + i);
+      g.appendChild(c); g.appendChild(t);
+      gNodes.appendChild(g);
+      nodeEls[i] = { g, c, t };
+    }
+    return { pts, cx, cy, nodeEls };
+  }
+
+  // ---------------------------------------------------------------- tooltip
+  const tooltip = $("#tooltip");
+  function tip(evt, html) {
+    tooltip.textContent = html;
+    tooltip.style.opacity = "1";
+    const pad = 14;
+    let x = evt.clientX + pad, y = evt.clientY + pad;
+    const r = tooltip.getBoundingClientRect();
+    if (x + r.width > window.innerWidth - 8) x = evt.clientX - r.width - pad;
+    if (y + r.height > window.innerHeight - 8) y = evt.clientY - r.height - pad;
+    tooltip.style.left = x + "px";
+    tooltip.style.top = y + "px";
+  }
+  function hideTooltip() { tooltip.style.opacity = "0"; }
+
+  // =============================================================== PART 1
+  (function sandbox() {
+    const svg = $("#sandbox"), msg = $("#sb-msg"), countEl = $("#sb-count");
+    const N = 8;
+    let selected = null;
+    let pairs = []; // [a,b]
+    const vb = svg.viewBox.baseVal;
+    const cx = vb.width / 2, cy = vb.height / 2, R = cx - 52;
+    const pts = ringPoints(N, cx, cy, R);
+
+    function render() {
+      clear(svg);
+      const gc = el("g", {}), gn = el("g", {});
+      svg.appendChild(gc); svg.appendChild(gn);
+      for (const [a, b] of pairs) {
+        const ok = isSquare(a + b);
+        gc.appendChild(el("path", {
+          d: chordPath(pts[a], pts[b], cx, cy, 0.4),
+          fill: "none", stroke: ok ? "var(--good)" : "var(--bad)",
+          "stroke-width": 3, "stroke-linecap": "round",
+        }));
+      }
+      for (let i = 1; i <= N; i++) {
+        const [x, y] = pts[i];
+        const isSel = selected === i;
+        const paired = pairs.some((p) => p[0] === i || p[1] === i);
+        const g = el("g", { style: "cursor:pointer" });
+        g.appendChild(el("circle", {
+          cx: x, cy: y, r: 21,
+          fill: paired ? "var(--panel-node)" : "#23252f",
+          stroke: isSel ? "var(--accent)" : "rgba(255,255,255,0.3)",
+          "stroke-width": isSel ? 3.5 : 1.4,
+        }));
+        g.appendChild(el("text", {
+          x: x, y: y + 0.5, "text-anchor": "middle", "dominant-baseline": "central",
+          "font-family": "'IBM Plex Mono', monospace", "font-size": 17,
+          fill: "var(--panel-ink)", "font-weight": 500,
+        }, "" + i));
+        g.addEventListener("click", () => click(i));
+        gn.appendChild(g);
+      }
+      countEl.textContent = pairs.filter((p) => isSquare(p[0] + p[1])).length + " / 4 pairs";
+    }
+
+    function click(i) {
+      const paired = pairs.some((p) => p[0] === i || p[1] === i);
+      if (paired) {
+        pairs = pairs.filter((p) => p[0] !== i && p[1] !== i);
+        selected = null;
+        msg.innerHTML = "Unlinked <b>" + i + "</b>.";
+        render();
+        return;
+      }
+      if (selected === null) {
+        selected = i;
+        msg.innerHTML = "<b>" + i + "</b> selected. Pick its partner.";
+        render();
+        return;
+      }
+      if (selected === i) { selected = null; render(); msg.textContent = "Deselected."; return; }
+      const a = selected, b = i, sum = a + b;
+      selected = null;
+      if (isSquare(sum)) {
+        pairs.push([a, b]);
+        msg.innerHTML = "<span class='tick'>✓</span> <b>" + a + " + " + b + " = " + sum + "</b> = " + sqrtOf(sum) + "². Linked.";
+        if (pairs.length === 4) msg.innerHTML += "  You solved it!";
+      } else {
+        msg.innerHTML = "<span class='cross'>✗</span> <b>" + a + " + " + b + " = " + sum + "</b> — not a perfect square. Try again.";
+      }
+      render();
+    }
+
+    $("#sb-reset").addEventListener("click", () => {
+      pairs = []; selected = null; msg.textContent = "Pick any two numbers to start."; render();
+    });
+    $("#sb-solve").addEventListener("click", () => {
+      pairs = [[1, 8], [2, 7], [3, 6], [4, 5]]; selected = null;
+      msg.innerHTML = "Every pair sums to <b>9</b> = 3². This is the only solution for n = 8.";
+      render();
+    });
+    render();
+  })();
+
+  // =============================================================== PART 2
+  (function graphSection() {
+    const svg = $("#graph-svg");
+    const slider = $("#g-n"), nval = $("#g-nval"), edgeCount = $("#g-edgecount");
+    const matchBtn = $("#g-match");
+    let showMatch = false;
+
+    function render() {
+      const N = +slider.value;
+      nval.textContent = N;
+      const edges = allEdges(N);
+      edgeCount.textContent = edges.length + " edges";
+      let pairs = [];
+      if (showMatch) {
+        const res = search(N, { solutions: true, limit: 1 });
+        if (res.solutions.length) pairs = res.solutions[0].map((p) => [p[0], p[1]]);
+      }
+      const usedSet = new Set();
+      pairs.forEach((p) => { usedSet.add(p[0]); usedSet.add(p[1]); });
+      drawRing(svg, N, {
+        hoverEdges: showMatch ? null : edges,
+        contextEdges: showMatch ? edges : null,
+        pairs: pairs,
+        usedSet: usedSet,
+        pull: 0.5,
+      });
+    }
+    slider.addEventListener("input", render);
+    matchBtn.addEventListener("click", () => {
+      showMatch = !showMatch;
+      matchBtn.setAttribute("aria-pressed", showMatch ? "true" : "false");
+      matchBtn.textContent = showMatch ? "Show all edges" : "Highlight one solution";
+      render();
+    });
+    render();
+  })();
+
+  // =============================================================== PART 3
+  const dfact = (k) => { let p = 1; for (let i = 3; i <= 2 * k - 1; i += 2) p *= i; return p; };
+
+  (function explodeStats() {
+    const wrap = $("#explode-stats");
+    const rows = [
+      { n: 8, note: "ways to pair 1–8" },
+      { n: 18, note: "ways to pair 1–18" },
+      { n: 30, note: "ways to pair 1–30" },
+    ];
+    for (const r of rows) {
+      const k = r.n / 2;
+      const total = dfact(k);
+      const sol = countSolutions(r.n);
+      const d = document.createElement("div");
+      d.className = "stat";
+      d.innerHTML =
+        "<span class='n" + (total >= 1e6 ? " small" : "") + "'>" + fmt(total) + "</span>" +
+        "<span class='l'>ways to pair up 1–" + r.n + "<br>" +
+        (sol === 1 ? "<b>exactly one</b> is all-squares" : "<b>" + fmt(sol) + "</b> are all-squares") +
+        "</span>";
+      wrap.appendChild(d);
+    }
+  })();
+
+  // ---- tiny chart toolkit (hand-rolled SVG, theme via CSS vars) -------------
+  function chartFrame(svg, m) {
+    const vb = svg.viewBox.baseVal;
+    return { x0: m.l, x1: vb.width - m.r, y0: vb.height - m.b, y1: m.t, w: vb.width, h: vb.height };
+  }
+  function txt(x, y, s, cls, anchor) {
+    return el("text", { x: x, y: y, class: cls || "ct", "text-anchor": anchor || "middle" }, s);
+  }
+
+  (function chartExplode() {
+    const svg = $("#chart-explode");
+    const f = chartFrame(svg, { l: 58, r: 96, t: 14, b: 34 });
+    clear(svg);
+    const Ns = [];
+    for (let n = 8; n <= 30; n += 2) Ns.push(n);
+    const total = Ns.map((n) => dfact(n / 2));
+    const sols = Ns.map((n) => Math.max(countSolutions(n), 0));
+    const logMax = 16, logMin = 0;
+    const X = (n) => f.x0 + ((n - 8) / (30 - 8)) * (f.x1 - f.x0);
+    const Y = (v) => {
+      const lv = v <= 0 ? logMin : clamp(Math.log10(v), logMin, logMax);
+      return f.y0 - (lv / logMax) * (f.y0 - f.y1);
+    };
+    // gridlines at powers of 1000
+    for (let e = 0; e <= 15; e += 3) {
+      const y = f.y0 - (e / logMax) * (f.y0 - f.y1);
+      svg.appendChild(el("line", { x1: f.x0, x2: f.x1, y1: y, y2: y, class: "cgrid" }));
+      svg.appendChild(txt(f.x0 - 8, y + 3.5, e === 0 ? "1" : "10^" + e, "ct", "end"));
+    }
+    // x labels
+    for (const n of [8, 14, 20, 26, 30]) {
+      svg.appendChild(txt(X(n), f.y0 + 20, "n=" + n, "ct"));
+    }
+    svg.appendChild(el("line", { x1: f.x0, x2: f.x1, y1: f.y0, y2: f.y0, class: "caxis" }));
+
+    const line = (arr, color) => {
+      let d = "";
+      Ns.forEach((n, i) => { d += (i ? "L" : "M") + X(n) + " " + Y(arr[i]); });
+      svg.appendChild(el("path", { d: d, fill: "none", stroke: color, "stroke-width": 2.5, "stroke-linejoin": "round" }));
+      Ns.forEach((n, i) => {
+        if (arr[i] > 0) svg.appendChild(el("circle", { cx: X(n), cy: Y(arr[i]), r: 3, fill: color }));
+      });
+    };
+    line(total, "var(--chart-1)");
+    line(sols, "var(--chart-2)");
+    svg.appendChild(txt(f.x1 + 8, Y(total[total.length - 1]) + 3, "all pairings", "ct val", "start"));
+    svg.appendChild(txt(f.x1 + 8, Y(sols[sols.length - 1]) + 3, "solutions", "ct val", "start"));
+
+    // hover
+    const hit = el("rect", { x: f.x0, y: f.y1, width: f.x1 - f.x0, height: f.y0 - f.y1, fill: "transparent" });
+    hit.addEventListener("mousemove", (e) => {
+      const pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY;
+      const loc = pt.matrixTransform(svg.getScreenCTM().inverse());
+      const n = clamp(Math.round((8 + ((loc.x - f.x0) / (f.x1 - f.x0)) * 22) / 2) * 2, 8, 30);
+      const i = Ns.indexOf(n);
+      if (i < 0) return;
+      tip(e, "n = " + n + "\npairings: " + fmt(total[i]) + "\nsolutions: " + fmt(sols[i]));
+    });
+    hit.addEventListener("mouseleave", hideTooltip);
+    svg.appendChild(hit);
+  })();
+
+  // =============================================================== PART 4
+  const STEP_N = 26;
+  (function stepper() {
+    const svg = $("#stepper-svg");
+    const narrate = $("#st-narrate"), stackEl = $("#st-stack"), progress = $("#st-progress");
+    const scrub = $("#st-scrub"), scrubVal = $("#st-scrubval");
+    const res = search(STEP_N, { record: true, mode: "naive" });
+    const events = res.events;
+    let idx = 0, timer = null, speed = 450;
+
+    scrub.max = events.length - 1;
+    progress.textContent = events.length + " steps · " + res.stats.solutions + " solutions";
+
+    function usedFrom(stack) { const s = new Set(); stack.forEach((p) => { s.add(p[0]); s.add(p[1]); }); return s; }
+
+    function render() {
+      const e = events[idx];
+      const pairs = e.stack.map((p) => {
+        let status = null;
+        if (e.t === "forced" && e.pair && p[0] === Math.min(e.pair[0], e.pair[1]) && p[1] === Math.max(e.pair[0], e.pair[1])) status = "forced";
+        if ((e.t === "try" || e.t === "backtrack") && e.pair && p[0] === Math.min(e.pair[0], e.pair[1]) && p[1] === Math.max(e.pair[0], e.pair[1])) status = "trying";
+        return [p[0], p[1], status];
+      });
+      drawRing(svg, STEP_N, {
+        pairs: pairs,
+        usedSet: usedFrom(e.stack),
+        pivot: e.pivot || (e.pair ? e.pair[0] : null),
+        pull: 0.44,
+      });
+      let note = e.note;
+      note = note.replace("✓", "<span class='tick'>✓</span>");
+      let lead = "•";
+      if (e.t === "forced") lead = "force";
+      else if (e.t === "try") lead = "try";
+      else if (e.t === "backtrack") lead = "undo";
+      else if (e.t === "deadend") lead = "✗";
+      else if (e.t === "solution") lead = "✓";
+      else if (e.t === "pivot") lead = "look";
+      narrate.innerHTML = "<span class='lead'>" + lead + "</span>" +
+        "<span class='" + (e.bad ? "cross" : e.t === "solution" ? "tick" : "") + "'>" + note + "</span>";
+
+      clear(stackEl);
+      e.stack.forEach((p) => {
+        const c = document.createElement("span");
+        c.className = "chip";
+        c.textContent = p[0] + "–" + p[1];
+        stackEl.appendChild(c);
+      });
+      scrub.value = idx; scrubVal.textContent = idx;
+    }
+
+    function go(d) { idx = clamp(idx + d, 0, events.length - 1); render(); }
+    function stop() { if (timer) { clearInterval(timer); timer = null; $("#st-play").textContent = "Play"; } }
+    function play() {
+      if (timer) { stop(); return; }
+      if (idx >= events.length - 1) idx = 0;
+      $("#st-play").textContent = "Pause";
+      timer = setInterval(() => { if (idx >= events.length - 1) { stop(); return; } go(1); }, speed);
+    }
+
+    $("#st-fwd").addEventListener("click", () => { stop(); go(1); });
+    $("#st-back").addEventListener("click", () => { stop(); go(-1); });
+    $("#st-reset").addEventListener("click", () => { stop(); idx = 0; render(); });
+    $("#st-play").addEventListener("click", play);
+    scrub.addEventListener("input", () => { stop(); idx = +scrub.value; render(); });
+    $$("#search .seg button").forEach((b) => {
+      b.addEventListener("click", () => {
+        $$("#search .seg button").forEach((x) => x.setAttribute("aria-pressed", "false"));
+        b.setAttribute("aria-pressed", "true");
+        speed = +b.dataset.sp;
+        if (timer) { stop(); play(); }
+      });
+    });
+    render();
+  })();
+
+  // ---- forced-only filmstrip for n = 18
+  (function forced18() {
+    const svg = $("#forced18-svg"), msg = $("#forced18-msg");
+    const res = search(18, { record: true, mode: "naive" });
+    const steps = res.events.filter((e) => e.t === "forced" || e.t === "solution");
+    let idx = 0;
+    function render() {
+      const shown = steps.slice(0, idx + 1);
+      const last = shown[shown.length - 1] || { stack: [], note: "Press ‘Next’ to place the first forced pair." };
+      drawRing(svg, 18, {
+        pairs: last.stack.map((p) => [p[0], p[1], "forced"]),
+        usedSet: new Set(last.stack.flat()),
+        pull: 0.44,
+      });
+      msg.innerHTML = "<span class='lead'>" + (last.t === "solution" ? "✓" : "force") + "</span>" +
+        (last.note || "");
+    }
+    $("#forced18-step").addEventListener("click", () => { idx = clamp(idx + 1, 0, steps.length - 1); render(); });
+    $("#forced18-back").addEventListener("click", () => { idx = clamp(idx - 1, 0, steps.length - 1); render(); });
+    $("#forced18-reset").addEventListener("click", () => { idx = 0; render(); });
+    render();
+  })();
+
+  // ---- naive vs mrv dead-end bar chart
+  (function chartMRV() {
+    const svg = $("#chart-mrv");
+    const cap = $("#chart-mrv-cap");
+    const f = chartFrame(svg, { l: 46, r: 16, t: 12, b: 40 });
+    clear(svg);
+    const Ns = [26, 32, 34];
+    const data = Ns.map((n) => ({
+      n,
+      naive: search(n, { mode: "naive" }).stats.deadends,
+      mrv: search(n, { mode: "mrv" }).stats.deadends,
+    }));
+    const maxV = Math.max.apply(null, data.map((d) => d.naive)) * 1.12;
+    const Y = (v) => f.y0 - (v / maxV) * (f.y0 - f.y1);
+    for (let g = 0; g <= 4; g++) {
+      const v = (maxV / 4) * g, y = Y(v);
+      svg.appendChild(el("line", { x1: f.x0, x2: f.x1, y1: y, y2: y, class: "cgrid" }));
+      svg.appendChild(txt(f.x0 - 8, y + 3.5, "" + Math.round(v), "ct", "end"));
+    }
+    svg.appendChild(el("line", { x1: f.x0, x2: f.x1, y1: f.y0, y2: f.y0, class: "caxis" }));
+    const groupW = (f.x1 - f.x0) / Ns.length;
+    const bw = 46;
+    data.forEach((d, i) => {
+      const gx = f.x0 + groupW * i + groupW / 2;
+      const bars = [["naive", d.naive, "var(--chart-1)", -bw - 3], ["mrv", d.mrv, "var(--chart-2)", 3]];
+      for (const [k, v, color, off] of bars) {
+        const x = gx + off, y = Y(v);
+        svg.appendChild(el("path", {
+          d: "M" + x + " " + f.y0 + " L" + x + " " + (y + 4) + " Q" + x + " " + y + " " + (x + 4) + " " + y +
+             " L" + (x + bw - 4) + " " + y + " Q" + (x + bw) + " " + y + " " + (x + bw) + " " + (y + 4) +
+             " L" + (x + bw) + " " + f.y0 + " Z",
+          fill: color,
+        }));
+        svg.appendChild(txt(x + bw / 2, y - 7, "" + v, "ct val"));
+      }
+      svg.appendChild(txt(gx, f.y0 + 20, "n = " + d.n, "ct"));
+    });
+    cap.innerHTML = "For <code>n = 34</code>, plain search wanders into <b>" + data[2].naive +
+      "</b> dead ends; focusing on the fewest-options number first cuts that to <b>" + data[2].mrv +
+      "</b> — while finding the same " + search(34, {}).stats.solutions + " solutions.";
+  })();
+
+  // =============================================================== PART 5
+  // >>> AUTO-GENERATED by `python -m src.build_tutorial` -- do not edit by hand
+  const COUNTS = [
+    [8, 1], [10, 0], [12, 0], [14, 1], [16, 1], [18, 1], [20, 0],
+    [22, 0], [24, 1], [26, 6], [28, 18], [30, 12], [32, 36], [34, 156],
+    [36, 295], [38, 429], [40, 755], [42, 2603], [44, 7122], [46, 19232], [48, 32818],
+    [50, 54363], [52, 172374], [54, 384053], [56, 933748], [58, 1639656], [60, 4366714],
+  ];
+  // <<< AUTO-GENERATED
+
+  (function chartCounts() {
+    const svg = $("#chart-counts");
+    const f = chartFrame(svg, { l: 52, r: 14, t: 14, b: 40 });
+    clear(svg);
+    const logMax = 7;
+    const X = (i) => f.x0 + (i + 0.5) * ((f.x1 - f.x0) / COUNTS.length);
+    const Y = (v) => v <= 0 ? f.y0 : f.y0 - (clamp(Math.log10(v), 0, logMax) / logMax) * (f.y0 - f.y1);
+    for (let e = 0; e <= logMax; e++) {
+      const y = f.y0 - (e / logMax) * (f.y0 - f.y1);
+      svg.appendChild(el("line", { x1: f.x0, x2: f.x1, y1: y, y2: y, class: "cgrid" }));
+      svg.appendChild(txt(f.x0 - 8, y + 3.5, e === 0 ? "1" : "10^" + e, "ct", "end"));
+    }
+    svg.appendChild(el("line", { x1: f.x0, x2: f.x1, y1: f.y0, y2: f.y0, class: "caxis" }));
+    const bw = ((f.x1 - f.x0) / COUNTS.length) * 0.62;
+    COUNTS.forEach(([n, v], i) => {
+      const x = X(i);
+      if (v === 0) {
+        svg.appendChild(el("circle", { cx: x, cy: f.y0 - 5, r: 3.4, fill: "none", stroke: "var(--ink-3)", "stroke-width": 1.4 }));
+      } else {
+        const y = Y(v);
+        svg.appendChild(el("path", {
+          d: "M" + (x - bw / 2) + " " + f.y0 + " L" + (x - bw / 2) + " " + (y + 3) +
+             " Q" + (x - bw / 2) + " " + y + " " + (x - bw / 2 + 3) + " " + y +
+             " L" + (x + bw / 2 - 3) + " " + y + " Q" + (x + bw / 2) + " " + y + " " + (x + bw / 2) + " " + (y + 3) +
+             " L" + (x + bw / 2) + " " + f.y0 + " Z",
+          fill: "var(--accent)",
+        }));
+      }
+      if (n % 6 === 2 || n === 60) svg.appendChild(txt(x, f.y0 + 20, "" + n, "ct"));
+      const hit = el("rect", { x: x - bw / 2 - 2, y: f.y1, width: bw + 4, height: f.y0 - f.y1, fill: "transparent" });
+      hit.addEventListener("mouseenter", (e) => tip(e, "n = " + n + "\n" + (v === 0 ? "no solutions" : fmt(v) + " solutions")));
+      hit.addEventListener("mousemove", (e) => tip(e, "n = " + n + "\n" + (v === 0 ? "no solutions" : fmt(v) + " solutions")));
+      hit.addEventListener("mouseleave", hideTooltip);
+      svg.appendChild(hit);
+    });
+    svg.appendChild(txt(f.x0 - 40, f.y1 - 2, "", "ct"));
+  })();
+
+  (function countsTable() {
+    const t = $("#counts-table");
+    const head = document.createElement("tr");
+    head.innerHTML = "<th>n</th><th>k = n/2</th><th>solutions</th>";
+    const thead = document.createElement("thead"); thead.appendChild(head); t.appendChild(thead);
+    const tb = document.createElement("tbody");
+    for (const [n, v] of COUNTS) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = "<td>" + n + "</td><td>" + (n / 2) + "</td>" +
+        "<td class='" + (v === 0 ? "zero" : "") + "'>" + (v === 0 ? "—" : v.toLocaleString("en-US")) + "</td>";
+      tb.appendChild(tr);
+    }
+    t.appendChild(tb);
+  })();
+
+  // =============================================================== PART 6
+  (function gallery() {
+    const svg = $("#gallery-svg"), legend = $("#gal-legend");
+    const which = $("#gal-which"), sumEl = $("#gal-sum"), tag = $("#gal-tag");
+    let N = 26, sols = [], si = 0;
+
+    function load(n) {
+      N = n;
+      sols = search(n, { solutions: true }).solutions;
+      si = 0;
+      render();
+    }
+    function render() {
+      const sol = sols[si] || [];
+      drawRing(svg, N, { pairs: sol.map((p) => [p[0], p[1]]), usedSet: new Set(sol.flat()), pull: 0.46 });
+      const squaresUsed = Array.from(new Set(sol.map((p) => sqrtOf(p[0] + p[1])))).sort((a, b) => a - b);
+      clear(legend);
+      squaresUsed.forEach((k) => {
+        const s = document.createElement("span");
+        s.innerHTML = "<i style='background:" + squareColor(k * k) + "'></i>" + (k * k);
+        legend.appendChild(s);
+      });
+      which.textContent = "solution " + (si + 1) + " of " + sols.length;
+      const sums = {};
+      sol.forEach((p) => { const k = sqrtOf(p[0] + p[1]); sums[k] = (sums[k] || 0) + 1; });
+      sumEl.textContent = Object.keys(sums).sort((a, b) => a - b)
+        .map((k) => sums[k] + "×" + k + "²").join("  ");
+      tag.textContent = "n = " + N;
+    }
+    $("#gal-prev").addEventListener("click", () => { si = (si - 1 + sols.length) % sols.length; render(); });
+    $("#gal-next").addEventListener("click", () => { si = (si + 1) % sols.length; render(); });
+    $$("#gal-nseg button").forEach((b) => {
+      b.addEventListener("click", () => {
+        $$("#gal-nseg button").forEach((x) => x.setAttribute("aria-pressed", "false"));
+        b.setAttribute("aria-pressed", "true");
+        load(+b.dataset.n);
+      });
+    });
+    load(26);
+  })();
+
+  (function live() {
+    const svg = $("#live-svg"), slider = $("#live-n"), nval = $("#live-nval");
+    const countEl = $("#live-count"), msg = $("#live-msg");
+    function render() {
+      const N = +slider.value;
+      nval.textContent = N;
+      const res = search(N, { solutions: true, limit: 1 });
+      const total = search(N, {}).stats.solutions;
+      countEl.textContent = total === 0 ? "no solutions" : total.toLocaleString("en-US") + " solution" + (total === 1 ? "" : "s");
+      if (res.solutions.length) {
+        const sol = res.solutions[0];
+        drawRing(svg, N, { pairs: sol.map((p) => [p[0], p[1]]), usedSet: new Set(sol.flat()), pull: 0.46 });
+        msg.innerHTML = "One solution: " + sol.map((p) => p[0] + "–" + p[1]).join(", ");
+      } else {
+        drawRing(svg, N, { contextEdges: allEdges(N), pairs: [], pull: 0.5 });
+        msg.innerHTML = "<span class='cross'>✗</span> The search exhausts every option and finds nothing. <b>n = " + N + "</b> cannot be paired.";
+      }
+    }
+    slider.addEventListener("input", render);
+    render();
+  })();
+
+  // ---------------------------------------------------------------- self-check
+  (function selfCheck() {
+    const expect = { 8: 1, 10: 0, 12: 0, 14: 1, 16: 1, 18: 1, 20: 0, 22: 0, 24: 1, 26: 6, 32: 36, 34: 156 };
+    let ok = true;
+    for (const n in expect) {
+      const got = countSolutions(+n);
+      if (got !== expect[n]) { ok = false; console.error("count mismatch n=" + n + " expected " + expect[n] + " got " + got); }
+    }
+    const s26 = search(26, { mode: "naive" }).stats, m26 = search(26, { mode: "mrv" }).stats;
+    console.log("[square-sum] self-check", ok ? "PASS" : "FAIL",
+      "| n=26 naive tries/deadends:", s26.tries + "/" + s26.deadends,
+      "mrv:", m26.tries + "/" + m26.deadends);
+  })();
+})();
+</script>
+</body>
+</html>

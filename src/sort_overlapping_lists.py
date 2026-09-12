@@ -6,6 +6,8 @@ import random
 from itertools import permutations
 from typing import List, Tuple
 
+from src.csv_writer import read_solutions, write_to_csv
+
 
 def count_common_pairs(list1: List[Tuple[int, int]], list2: List[Tuple[int, int]]) -> int:
     """
@@ -291,6 +293,15 @@ def sort_lists_smart(lists: List[List[Tuple[int, int]]], method: str = "auto") -
         return sort_by_simulated_annealing(lists)
     else:
         raise ValueError(f"Unknown method: {method}")
+
+
+def create_ordered_csv(input_csv: str, output_csv: str, limit: int, method: str = "auto") -> None:
+    """Load the first ``limit`` solutions from ``input_csv``, reorder them to
+    maximize overlap between consecutive solutions, and write ``output_csv``.
+    """
+    solutions = list(read_solutions(input_csv, limit=limit))
+    ordered = sort_lists_smart(solutions, method=method)
+    write_to_csv(ordered, output_csv=output_csv)
 
 
 # Example usage and testing
