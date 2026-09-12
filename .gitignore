@@ -212,3 +212,7 @@ __marimo__/
 *.csv
 *.png
 .DS_Store
+
+# squarepair solver
+.venv-pypy/
+*.shards/
